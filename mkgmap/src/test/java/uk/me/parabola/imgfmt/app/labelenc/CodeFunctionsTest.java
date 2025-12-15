@@ -1,0 +1,132 @@
+/*
+ * Copyright (C) 2009.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 or
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ */
+package uk.me.parabola.imgfmt.app.labelenc;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Arrays;
+
+import org.junit.jupiter.api.Test;
+
+public class CodeFunctionsTest {
+	/**
+	 * Quick check of the ascii 6 bit format conversion.
+	 */
+	@Test
+	public void testFormat6() {
+		CodeFunctions functions = CodeFunctions.createEncoderForLBL(6, 0);
+		assertEquals(0, functions.getCodepage(), "code page");
+		assertEquals(6, functions.getEncodingType(), "encoding type");
+		CharacterEncoder enc = functions.getEncoder();
+
+		EncodedText etext = enc.encodeText("hello world");
+		byte[] ctext = etext.getCtext();
+		int len = etext.getLength();
+
+		// This was determined from the behaviour of the existing code, and not
+		// from first principles.
+		assertEquals(9, len, "encoded length");
+		byte[] foo = {
+				0x20, 0x53, 0xc, 0x3c, 0x5, 0xffffffcf, 0x48, 0xffffffc1, 0x3f,
+		};
+		assertArrayEquals(foo, Arrays.copyOf(ctext, len), "encoded text");
+	}
+
+	@Test
+	public void testAscii() {
+		CodeFunctions f = CodeFunctions.createEncoderForLBL("ascii");
+		assertEquals(0, f.getCodepage(), "code page");
+		assertEquals(6, f.getEncodingType(), "encoding type");
+	}
+
+	/**
+	 * Transliteration when going to ascii in format 6.  This was originally
+	 * the only place where transliteration was available.
+	 */
+	@Test
+	public void testTransliterate6() {
+		CodeFunctions functions = CodeFunctions.createEncoderForLBL(6, 0);
+
+		CharacterEncoder encoder = functions.getEncoder();
+		// Twülpstedt contains u + "COMBINING DIAERESIS" (0x75 + 0x308)
+		EncodedText text = encoder.encodeText("Körnerstraße, Twülpstedt, Velkomezeříčská, Skólavörðustigur");
+
+		CharacterDecoder decoder = functions.getDecoder();
+		byte[] ctext = text.getCtext();
+		boolean finished = false;
+		int i = 0;
+		while (!finished) {
+			finished = decoder.addByte(ctext[i++]);
+		}
+		String result = decoder.getText().getText();
+		assertEquals("KORNERSTRASSE, TWULPSTEDT, VELKOMEZERICSKA, SKOLAVORDUSTIGUR", result, "transliterated text");
+	}
+
+	/**
+	* Transliteration when going to ascii in format 6.  This was originally
+	* the only place where transliteration was available.
+	*/
+	@Test
+	public void testTransliterateLatin() {
+		CodeFunctions functions = CodeFunctions.createEncoderForLBL("latin1");
+
+		CharacterEncoder encoder = functions.getEncoder();
+		// Twülpstedt contains u + "COMBINING DIAERESIS" (0x75 + 0x308)
+		EncodedText text = encoder.encodeText("Körnerstraße, Twülpstedt, Velkomezeříčská, Skólavörðustigur");
+
+		CharacterDecoder decoder = functions.getDecoder();
+		byte[] ctext = text.getCtext();
+		boolean finished = false;
+		int i = 0;
+		while (!finished) {
+			finished = decoder.addByte(ctext[i++]);
+		}
+
+		String result = decoder.getText().getText();
+		// Twülpstedt now contains LATIN SMALL LETTER U WITH DIAERESIS (u+00fc)
+		assertEquals("Körnerstraße, Twülpstedt, Velkomezerícská, Skólavörðustigur", result, "transliterated text");
+	}
+
+	/**
+	 * Backward compatibility test.
+	 */
+	@Test
+	public void testLatin1() {
+		CodeFunctions functions = CodeFunctions.createEncoderForLBL("latin1");
+		assertEquals(1252, functions.getCodepage(), "code page");
+		assertEquals(9, functions.getEncodingType(), "encoding type");
+
+		StringBuilder sb = new StringBuilder();
+		for (char c = 1; c < 256; c++) {
+			sb.append(c);
+		}
+
+		CharacterEncoder encoder = functions.getEncoder();
+		EncodedText text = encoder.encodeText(sb.toString());
+
+		// This encoder appends a null byte.
+		assertEquals(256, text.getLength(), "length of encoded text");
+
+		for (int i = 1; i < 256; i++) {
+			// The following characters do not display on my GPS.  This covers
+			// the region where windows-1252 differs from iso 8859 so we don't
+			// really know which it is meant to be.
+			if (i >= 0x80 && i <= 0xbf)
+				continue;
+			assertEquals(i, text.getCtext()[i-1] & 0xff, "character");
+		}
+	}
+	
+	
+}
