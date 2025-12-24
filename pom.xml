@@ -13,6 +13,7 @@
     <modules>
         <module>mkgmap</module>
         <module>splitter</module>
+        <module>garmin-img</module>
     </modules>
 
     <properties>
