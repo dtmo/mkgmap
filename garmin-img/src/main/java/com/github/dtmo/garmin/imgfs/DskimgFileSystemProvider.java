@@ -23,54 +23,54 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class GarminImgFileSystemProvider extends FileSystemProvider {
-    private final Map<Path, GarminImgFileSystem> filesystems = new HashMap<>();
+public class DskimgFileSystemProvider extends FileSystemProvider {
+    private final Map<Path, DskimgFileSystem> filesystems = new HashMap<>();
 
     @Override
     public String getScheme() {
-        return "garminimg";
+        return "dskimg";
     }
 
     @Override
-    public GarminImgFileSystem newFileSystem(final Path path, final Map<String, ?> env) throws IOException {
+    public DskimgFileSystem newFileSystem(final Path path, final Map<String, ?> env) throws IOException {
         synchronized (filesystems) {
             if (filesystems.containsKey(path)) {
                 throw new FileSystemAlreadyExistsException("The requested filesystem already exists: " + path);
             }
 
-            final GarminImgFileSystem garminImgFileSystem = new GarminImgFileSystem(this, path);
-            filesystems.put(path, garminImgFileSystem);
+            final DskimgFileSystem dskimgFileSystem = new DskimgFileSystem(this, path);
+            filesystems.put(path, dskimgFileSystem);
 
-            return garminImgFileSystem;
+            return dskimgFileSystem;
         }    
     }
 
     @Override
-    public GarminImgFileSystem newFileSystem(final URI uri, final Map<String, ?> env) throws IOException {
-        // We are expecting a URI along the lines of: garminimg:/some/path/to/file.img
+    public DskimgFileSystem newFileSystem(final URI uri, final Map<String, ?> env) throws IOException {
+        // We are expecting a URI along the lines of: dskimg:/some/path/to/file.img
         if (!getScheme().equalsIgnoreCase(uri.getScheme())) {
             throw new IllegalArgumentException("Incorrect URI scheme: " + getScheme());
         }
 
         final String schemeSpecificPart = uri.getSchemeSpecificPart();
 
-        final Path garminImgFilePath = Path.of(schemeSpecificPart).toRealPath();
+        final Path dskimgFilePath = Path.of(schemeSpecificPart).toRealPath();
 
         synchronized (filesystems) {
-            if (filesystems.containsKey(garminImgFilePath)) {
-                throw new FileSystemAlreadyExistsException("The requested filesystem already exists: " + garminImgFilePath);
+            if (filesystems.containsKey(dskimgFilePath)) {
+                throw new FileSystemAlreadyExistsException("The requested filesystem already exists: " + dskimgFilePath);
             }
 
-            final GarminImgFileSystem garminImgFileSystem = new GarminImgFileSystem(this, garminImgFilePath);
-            filesystems.put(garminImgFilePath, garminImgFileSystem);
+            final DskimgFileSystem dskimgFileSystem = new DskimgFileSystem(this, dskimgFilePath);
+            filesystems.put(dskimgFilePath, dskimgFileSystem);
 
-            return garminImgFileSystem;
+            return dskimgFileSystem;
         }
     }
 
     @Override
-    public GarminImgFileSystem getFileSystem(final URI uri) {
-        // We are expecting a URI along the lines of: garminimg:/some/path/to/file.img
+    public DskimgFileSystem getFileSystem(final URI uri) {
+        // We are expecting a URI along the lines of: dskimg:/some/path/to/file.img
         if (!getScheme().equalsIgnoreCase(uri.getScheme())) {
             throw new IllegalArgumentException("Incorrect URI scheme: " + getScheme());
         }
@@ -81,21 +81,21 @@ public class GarminImgFileSystemProvider extends FileSystemProvider {
             final Path imgFilePath = Path.of(schemeSpecificPart).toRealPath();
 
             synchronized (filesystems) {
-                final GarminImgFileSystem garminImgFileSystem = filesystems.get(imgFilePath);
+                final DskimgFileSystem dskimgFileSystem = filesystems.get(imgFilePath);
 
-                if (garminImgFileSystem != null) {
-                    return garminImgFileSystem;
+                if (dskimgFileSystem != null) {
+                    return dskimgFileSystem;
                 } else {
                     throw new FileSystemNotFoundException("Count not find existing filesystem for: " + imgFilePath);
                 }
             }
         } catch (final IOException e) {
-            throw new UncheckedIOException("Could not get real path for Garmin IMG file: " + schemeSpecificPart, e);
+            throw new UncheckedIOException("Could not get real path for Garmin DSKIMG file: " + schemeSpecificPart, e);
         }
     }
 
     @Override
-    public GarminImgPath getPath(final URI uri) {
+    public DskimgPath getPath(final URI uri) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getPath'");
     }
@@ -112,8 +112,8 @@ public class GarminImgFileSystemProvider extends FileSystemProvider {
             throws IOException {
         Objects.requireNonNull(dir);
 
-        if (dir instanceof GarminImgPath garminImgPath) {
-            return new GarminImgDirectoryStream(garminImgPath.getFileSystem());
+        if (dir instanceof DskimgPath dskimgPath) {
+            return new DskimgDirectoryStream(dskimgPath.getFileSystem());
         } else {
             throw new ProviderMismatchException();
         }
@@ -156,7 +156,7 @@ public class GarminImgFileSystemProvider extends FileSystemProvider {
     }
 
     @Override
-    public GarminImgFileStore getFileStore(final Path path) throws IOException {
+    public DskimgFileStore getFileStore(final Path path) throws IOException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getFileStore'");
     }
@@ -196,9 +196,9 @@ public class GarminImgFileSystemProvider extends FileSystemProvider {
         throw new UnsupportedOperationException("Unimplemented method 'setAttribute'");
     }
 
-    public void removeFileSystem(final GarminImgFileSystem garminImgFileSystem) {
+    public void removeFileSystem(final DskimgFileSystem dskimgFileSystem) {
         synchronized (filesystems) {
-            filesystems.remove(garminImgFileSystem.getGarminImgFilePath());
+            filesystems.remove(dskimgFileSystem.getdskimgFilePath());
         }
     }
 }

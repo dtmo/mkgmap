@@ -9,7 +9,7 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.util.Arrays;
 
-public record GarminImgMetadata(int version, YearMonth updatedAt, LocalDateTime createdAt, int fatStartBlock,
+public record DskimgMetadata(int version, YearMonth updatedAt, LocalDateTime createdAt, int fatStartBlock,
                 HardDiskGeometry hardDiskGeometry, String description, long dataBlockSize) {
         public static final int FAT_BLOCK_SIZE = 512;
         public static final int OFFSET_XOR_BYTE = 0x00;
@@ -42,7 +42,7 @@ public record GarminImgMetadata(int version, YearMonth updatedAt, LocalDateTime 
                 return FAT_BLOCK_SIZE * fatStartBlock;
         }
 
-        public static GarminImgMetadata read(final ByteBuffer byteBuffer) throws IOException {
+        public static DskimgMetadata read(final ByteBuffer byteBuffer) throws IOException {
                 byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
                 final int version = Short.toUnsignedInt(byteBuffer.getShort(OFFSET_VERSION));
@@ -57,7 +57,7 @@ public record GarminImgMetadata(int version, YearMonth updatedAt, LocalDateTime 
                 byteBuffer.get(OFFSET_DSKIMG, dskimgBytes);
                 if (!Arrays.equals(DSKIMG_SIGNATURE, dskimgBytes)) {
                         throw new UnsupportedOperationException(
-                    "Expected DSKIMG signature bytes " + Arrays.toString(DSKIMG_SIGNATURE) + ", but got: "
+                    "Expected dskimg signature bytes " + Arrays.toString(DSKIMG_SIGNATURE) + ", but got: "
                             + Arrays.toString(dskimgBytes));
                 }
 
@@ -110,7 +110,7 @@ public record GarminImgMetadata(int version, YearMonth updatedAt, LocalDateTime 
                                 + Integer.toUnsignedString(
                                                 byteBuffer.getShort(OFFSET_MYSTERIOUS_DISK_GEOMETRY_RELATED_VALUE)));
 
-                return new GarminImgMetadata(version, updatedAt, createdAt, fatStartBlock, hardDiskGeometry,
+                return new DskimgMetadata(version, updatedAt, createdAt, fatStartBlock, hardDiskGeometry,
                                 description,
                                 dataBlockSize);
         }

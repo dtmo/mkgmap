@@ -7,12 +7,12 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class GarminImgDirectoryStream implements DirectoryStream<Path> {
-    private final GarminImgFileSystem garminImgFileSystem;
+public class DskimgDirectoryStream implements DirectoryStream<Path> {
+    private final DskimgFileSystem dskimgFileSystem;
     private boolean isClosed = false;
 
-    public GarminImgDirectoryStream(final GarminImgFileSystem garminImgFileSystem) {
-        this.garminImgFileSystem = garminImgFileSystem;
+    public DskimgDirectoryStream(final DskimgFileSystem dskimgFileSystem) {
+        this.dskimgFileSystem = dskimgFileSystem;
     }
 
     @Override
@@ -21,7 +21,7 @@ public class GarminImgDirectoryStream implements DirectoryStream<Path> {
             throw new ClosedDirectoryStreamException();
         }
 
-        final Iterator<GarminImgPath> pathIterator = garminImgFileSystem.pathIterator();
+        final Iterator<DskimgPath> pathIterator = dskimgFileSystem.pathIterator();
 
         return new Iterator<Path>() {
             @Override

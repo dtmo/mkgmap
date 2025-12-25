@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-public class GarminImgInputStream implements AutoCloseable {
+public class DskimgInputStream implements AutoCloseable {
     private XorInputStream xorInputStream;
 
-    protected GarminImgInputStream(final XorInputStream xorInputStream) {
+    protected DskimgInputStream(final XorInputStream xorInputStream) {
         this.xorInputStream = xorInputStream;
     }
 
@@ -18,12 +18,12 @@ public class GarminImgInputStream implements AutoCloseable {
         return masterBootRecord;
     }
 
-    public static GarminImgInputStream create(final InputStream inputStream) throws IOException {
+    public static DskimgInputStream create(final InputStream inputStream) throws IOException {
         final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
         bufferedInputStream.mark(16);
         final byte xorByte = (byte) bufferedInputStream.read();
         bufferedInputStream.reset();
-        return new GarminImgInputStream(new XorInputStream(bufferedInputStream, xorByte));
+        return new DskimgInputStream(new XorInputStream(bufferedInputStream, xorByte));
     }
 
     @Override

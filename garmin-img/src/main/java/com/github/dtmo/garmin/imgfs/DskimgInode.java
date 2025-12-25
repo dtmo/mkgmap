@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public record GarminImgInode(long fileSize, List<Integer> logicalBlockAddresses) {
+public record DskimgInode(long fileSize, List<Integer> logicalBlockAddresses) {
     public static Builder builder(final long dataBlockSize, final long fileSize) {
         return new Builder((int) Math.ceilDiv(fileSize, dataBlockSize))
                 .withFileSize(fileSize);
@@ -41,8 +41,8 @@ public record GarminImgInode(long fileSize, List<Integer> logicalBlockAddresses)
             return this;
         }
 
-        public GarminImgInode build() {
-            return new GarminImgInode(fileSize, List.copyOf(logicalBlockAddresses));
+        public DskimgInode build() {
+            return new DskimgInode(fileSize, List.copyOf(logicalBlockAddresses));
         }
     }
 }

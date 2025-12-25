@@ -1,6 +1,6 @@
 package com.github.dtmo.garmin.imgfs;
 
-import static com.github.dtmo.garmin.imgfs.GarminImgFileSystem.SEPARATOR_STRING;
+import static com.github.dtmo.garmin.imgfs.DskimgFileSystem.SEPARATOR_STRING;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,18 +14,18 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
 
-public class GarminImgPath implements Path {
-    private final GarminImgFileSystem garminImgFileSystem;
+public class DskimgPath implements Path {
+    private final DskimgFileSystem dskimgFileSystem;
     private final String filename;
 
-    public GarminImgPath(final GarminImgFileSystem garminImgFileSystem, final String filename) {
-        this.garminImgFileSystem = garminImgFileSystem;
+    public DskimgPath(final DskimgFileSystem dskimgFileSystem, final String filename) {
+        this.dskimgFileSystem = dskimgFileSystem;
         this.filename = filename;
     }
 
     @Override
-    public GarminImgFileSystem getFileSystem() {
-        return garminImgFileSystem;
+    public DskimgFileSystem getFileSystem() {
+        return dskimgFileSystem;
     }
 
     @Override
@@ -38,25 +38,25 @@ public class GarminImgPath implements Path {
     }
 
     @Override
-    public GarminImgPath getRoot() {
-        return garminImgFileSystem.getRootDirectory();
+    public DskimgPath getRoot() {
+        return dskimgFileSystem.getRootDirectory();
     }
 
     @Override
-    public GarminImgPath getFileName() {
-        // The Garmin IMG filesystem does not support nested directory structures, so we
+    public DskimgPath getFileName() {
+        // The Garmin DSKIMG filesystem does not support nested directory structures, so we
         // only need to strip off an optional leading separator character for absolute
         // paths.
         if (!isAbsolute()) {
             return this;
         } else {
-            return new GarminImgPath(getFileSystem(), filename.substring(1));
+            return new DskimgPath(getFileSystem(), filename.substring(1));
         }
     }
 
     @Override
-    public GarminImgPath getParent() {
-        // The Garmin IMG filesystem does not support nested directory structures, so
+    public DskimgPath getParent() {
+        // The Garmin DSKIMG filesystem does not support nested directory structures, so
         // the parent is always root for non-root paths, or null for root paths.
         if (isRoot()) {
             return null;
@@ -67,15 +67,15 @@ public class GarminImgPath implements Path {
 
     @Override
     public int getNameCount() {
-        // The Garmin IMG filesystem does not support nested directory structures, so
+        // The Garmin DSKIMG filesystem does not support nested directory structures, so
         // the path is always eaither the root or has name name element.
         return isRoot() ? 0 : 1;
     }
 
     @Override
-    public GarminImgPath getName(final int index) {
+    public DskimgPath getName(final int index) {
         if (index != 0) {
-            throw new IllegalArgumentException("The Garmin IMG filesystem does not support nested directories");
+            throw new IllegalArgumentException("The Garmin DSKIMG filesystem does not support nested directories");
         }
 
         if (isRoot()) {
@@ -86,14 +86,14 @@ public class GarminImgPath implements Path {
     }
 
     @Override
-    public GarminImgPath subpath(final int beginIndex, final int endIndex) {
+    public DskimgPath subpath(final int beginIndex, final int endIndex) {
         throw new UnsupportedOperationException("Unimplemented method 'subpath'");
     }
 
     @Override
     public boolean startsWith(final Path other) {
-        if (other instanceof GarminImgPath garminImgPath) {
-            return filename.equalsIgnoreCase(garminImgPath.filename);
+        if (other instanceof DskimgPath dskimgPath) {
+            return filename.equalsIgnoreCase(dskimgPath.filename);
         } else {
             return false;
         }
@@ -101,25 +101,25 @@ public class GarminImgPath implements Path {
 
     @Override
     public boolean endsWith(final Path other) {
-        if (other instanceof GarminImgPath garminImgPath) {
-            return filename.equalsIgnoreCase(garminImgPath.filename);
+        if (other instanceof DskimgPath dskimgPath) {
+            return filename.equalsIgnoreCase(dskimgPath.filename);
         } else {
             return false;
         }
     }
 
     @Override
-    public GarminImgPath normalize() {
+    public DskimgPath normalize() {
         throw new UnsupportedOperationException("Unimplemented method 'normalize'");
     }
 
     @Override
-    public GarminImgPath resolve(final Path other) {
+    public DskimgPath resolve(final Path other) {
         throw new UnsupportedOperationException("Unimplemented method 'resolve'");
     }
 
     @Override
-    public GarminImgPath relativize(final Path other) {
+    public DskimgPath relativize(final Path other) {
         throw new UnsupportedOperationException("Unimplemented method 'relativize'");
     }
 
@@ -133,16 +133,16 @@ public class GarminImgPath implements Path {
     }
 
     @Override
-    public GarminImgPath toAbsolutePath() {
+    public DskimgPath toAbsolutePath() {
         if (isAbsolute()) {
             return this;
         } else {
-            return new GarminImgPath(garminImgFileSystem, SEPARATOR_STRING + filename);
+            return new DskimgPath(dskimgFileSystem, SEPARATOR_STRING + filename);
         }
     }
 
     @Override
-    public GarminImgPath toRealPath(final LinkOption... options) throws IOException {
+    public DskimgPath toRealPath(final LinkOption... options) throws IOException {
         return toAbsolutePath();
     }
 
@@ -154,11 +154,11 @@ public class GarminImgPath implements Path {
 
     @Override
     public int compareTo(final Path other) {
-        if (other instanceof GarminImgPath garminImgPath) {
-            return filename.compareTo(garminImgPath.filename);
+        if (other instanceof DskimgPath dskimgPath) {
+            return filename.compareTo(dskimgPath.filename);
         } else {
             throw new ProviderMismatchException(
-                    "Cannot compare an instance of GarminImgPath with an instance of " + other.getClass());
+                    "Cannot compare an instance of dskimgPath with an instance of " + other.getClass());
         }
     }
 
@@ -178,9 +178,9 @@ public class GarminImgPath implements Path {
             return false;
         } else if (this == other) {
             return true;
-        } else if (other instanceof GarminImgPath garminImgPath) {
-            return this.garminImgFileSystem == garminImgPath.garminImgFileSystem
-                    && Objects.equals(filename, garminImgPath.filename);
+        } else if (other instanceof DskimgPath dskimgPath) {
+            return this.dskimgFileSystem == dskimgPath.dskimgFileSystem
+                    && Objects.equals(filename, dskimgPath.filename);
         } else {
             return false;
         }

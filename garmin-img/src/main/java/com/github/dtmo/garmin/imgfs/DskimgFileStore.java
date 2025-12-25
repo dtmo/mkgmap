@@ -5,16 +5,16 @@ import java.nio.file.FileStore;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
 
-public class GarminImgFileStore extends FileStore {
-    private final GarminImgFileSystem garminImgFileSystem;
+public class DskimgFileStore extends FileStore {
+    private final DskimgFileSystem dskimgFileSystem;
 
-    public GarminImgFileStore(final GarminImgFileSystem garminImgFileSystem) {
-        this.garminImgFileSystem = garminImgFileSystem;
+    public DskimgFileStore(final DskimgFileSystem dskimgFileSystem) {
+        this.dskimgFileSystem = dskimgFileSystem;
     }
 
     @Override
     public String name() {
-        return garminImgFileSystem + "/";
+        return dskimgFileSystem + "/";
     }
 
     @Override
@@ -24,7 +24,7 @@ public class GarminImgFileStore extends FileStore {
 
     @Override
     public boolean isReadOnly() {
-        return garminImgFileSystem.isReadOnly();
+        return dskimgFileSystem.isReadOnly();
     }
 
     @Override

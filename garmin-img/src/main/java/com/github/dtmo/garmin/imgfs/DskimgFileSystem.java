@@ -20,25 +20,25 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class GarminImgFileSystem extends FileSystem {
+public class DskimgFileSystem extends FileSystem {
     public static final char SEPARATOR_CHAR = '/';
     public static final String SEPARATOR_STRING = String.valueOf(SEPARATOR_CHAR);
 
-    private final GarminImgFileSystemProvider garminImgFileSystemProvider;
-    private final Path garminImgFilePath;
+    private final DskimgFileSystemProvider dskimgFileSystemProvider;
+    private final Path dskimgFilePath;
     private final byte xorByte;
     private final MasterBootRecord masterBootRecord;
-    private final GarminImgMetadata metadata;
-    private final Map<GarminImgPath, GarminImgInode> inodes;
-    private final GarminImgPath rootDirectory;
+    private final DskimgMetadata metadata;
+    private final Map<DskimgPath, DskimgInode> inodes;
+    private final DskimgPath rootDirectory;
     private boolean isOpen = true;
 
-    public GarminImgFileSystem(final GarminImgFileSystemProvider garminImgFileSystemProvider,
-            final Path garminImgFilePath) throws IOException {
-        this.garminImgFileSystemProvider = garminImgFileSystemProvider;
-        this.garminImgFilePath = garminImgFilePath;
+    public DskimgFileSystem(final DskimgFileSystemProvider dskimgFileSystemProvider,
+            final Path dskimgFilePath) throws IOException {
+        this.dskimgFileSystemProvider = dskimgFileSystemProvider;
+        this.dskimgFilePath = dskimgFilePath;
 
-        try (final SeekableByteChannel channel = Files.newByteChannel(garminImgFilePath)) {
+        try (final SeekableByteChannel channel = Files.newByteChannel(dskimgFilePath)) {
             final ByteBuffer byteBuffer = ByteBuffer.allocate(MasterBootRecord.SIZE_BYTES);
             channel.read(byteBuffer);
 
@@ -53,17 +53,17 @@ public class GarminImgFileSystem extends FileSystem {
 
             this.masterBootRecord = MasterBootRecord.read(byteBuffer);
 
-            // The master boot record bootstrap area contains the Garmin IMG header.
-            this.metadata = GarminImgMetadata.read(ByteBuffer.wrap(masterBootRecord.bootstrapBytes()));
+            // The master boot record bootstrap area contains the Garmin DSKIMG header.
+            this.metadata = DskimgMetadata.read(ByteBuffer.wrap(masterBootRecord.bootstrapBytes()));
 
             this.inodes = readFileInodes(channel);
         }
 
-        rootDirectory = new GarminImgPath(this, SEPARATOR_STRING);
+        rootDirectory = new DskimgPath(this, SEPARATOR_STRING);
     }
 
-    public Map<GarminImgPath, GarminImgInode> readFileInodes(final SeekableByteChannel channel) throws IOException {
-        final HashMap<GarminImgPath, GarminImgInode> inodes = new LinkedHashMap<>();
+    public Map<DskimgPath, DskimgInode> readFileInodes(final SeekableByteChannel channel) throws IOException {
+        final HashMap<DskimgPath, DskimgInode> inodes = new LinkedHashMap<>();
 
         channel.position(metadata.fileAllocationTableOffset());
 
@@ -87,7 +87,7 @@ public class GarminImgFileSystem extends FileSystem {
             byteBuffer.flip();
 
             fileAllocationTableEntry = FileAllocationTableEntry.read(byteBuffer);
-            GarminImgInode.Builder inodeBuilder = GarminImgInode.builder(this.metadata.dataBlockSize(),
+            DskimgInode.Builder inodeBuilder = DskimgInode.builder(this.metadata.dataBlockSize(),
                     fileAllocationTableEntry.fileSize())
                     .withLogicalBlockAdresses(fileAllocationTableEntry.logicalBlockAddresses());
             FileAllocationTableEntry previousFileAllocationTableEntry;
@@ -109,7 +109,7 @@ public class GarminImgFileSystem extends FileSystem {
                     } else {
                         // We have found an entry relating to a new file, so we need to register the
                         // current inode and start building a new one.
-                        final GarminImgPath path = new GarminImgPath(this, previousFileAllocationTableEntry.filename());
+                        final DskimgPath path = new DskimgPath(this, previousFileAllocationTableEntry.filename());
 
                         if (!inodes.containsKey(path)) {
                             inodes.put(path, inodeBuilder.build());
@@ -118,7 +118,7 @@ public class GarminImgFileSystem extends FileSystem {
                                     + previousFileAllocationTableEntry.filename());
                         }
 
-                        inodeBuilder = GarminImgInode.builder(this.metadata.dataBlockSize(),
+                        inodeBuilder = DskimgInode.builder(this.metadata.dataBlockSize(),
                                 fileAllocationTableEntry.fileSize())
                                 .withLogicalBlockAdresses(fileAllocationTableEntry.logicalBlockAddresses());
                     }
@@ -130,7 +130,7 @@ public class GarminImgFileSystem extends FileSystem {
             if (fileAllocationTableEntry.entryType() == FileAllocationTableEntry.EntryType.REGULAR) {
                 // We have finished iterating over the file allocation table entries, so we need
                 // to register the final inode.
-                final GarminImgPath path = new GarminImgPath(this, fileAllocationTableEntry.filename());
+                final DskimgPath path = new DskimgPath(this, fileAllocationTableEntry.filename());
 
                 if (!inodes.containsKey(path)) {
                     inodes.put(path, inodeBuilder.build());
@@ -146,24 +146,24 @@ public class GarminImgFileSystem extends FileSystem {
         }
     }
 
-    public Path getGarminImgFilePath() {
-        return garminImgFilePath;
+    public Path getdskimgFilePath() {
+        return dskimgFilePath;
     }
 
-    public GarminImgPath getRootDirectory() {
+    public DskimgPath getRootDirectory() {
         return rootDirectory;
     }
 
     @Override
-    public GarminImgFileSystemProvider provider() {
-        return garminImgFileSystemProvider;
+    public DskimgFileSystemProvider provider() {
+        return dskimgFileSystemProvider;
     }
 
     @Override
     public void close() throws IOException {
         this.isOpen = false;
 
-        garminImgFileSystemProvider.removeFileSystem(this);
+        dskimgFileSystemProvider.removeFileSystem(this);
     }
 
     @Override
@@ -200,11 +200,11 @@ public class GarminImgFileSystem extends FileSystem {
     }
 
     @Override
-    public GarminImgPath getPath(final String first, final String... more) {
+    public DskimgPath getPath(final String first, final String... more) {
         if (more.length == 0) {
-            return new GarminImgPath(this, first);
+            return new DskimgPath(this, first);
         } else {
-            throw new UnsupportedOperationException("The Garmin IMG file system does not support nested directories");
+            throw new UnsupportedOperationException("The Garmin DSKIMG file system does not support nested directories");
         }
     }
 
@@ -226,7 +226,7 @@ public class GarminImgFileSystem extends FileSystem {
         throw new UnsupportedOperationException("Unimplemented method 'newWatchService'");
     }
 
-    public Iterator<GarminImgPath> pathIterator() {
+    public Iterator<DskimgPath> pathIterator() {
         return inodes.keySet().iterator();
     }
 
