@@ -5,6 +5,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +21,14 @@ class DskimgInputStreamTest {
         try (FileSystem filesystem = FileSystems.newFileSystem(BASE_MAP_PATH)) {
             final Path path = filesystem.getPath("006_F006.TRE");
             try (InputStream inputStream = Files.newInputStream(path)) {
-                final byte[] allBytes = inputStream.readAllBytes();
                 System.out.println("File size: " + Files.size(path));
-                System.out.println("Read " + allBytes.length + " bytes");
+                for (int i = 0; i < 128; i++) {
+                    final byte[] bytes = inputStream.readNBytes(16);
+                    System.out.println(
+                            IntStream.range(0, bytes.length)
+                                    .mapToObj(idx -> Integer.toHexString(Byte.toUnsignedInt(bytes[idx])))
+                                    .collect(Collectors.joining(", ")));
+                }
             }
         }
     }

@@ -72,35 +72,39 @@ public class DskimgByteChannel implements SeekableByteChannel {
             // Work out which DSKIMG block we should be reading bytes from
             final int positionDataBlockIndex = positionDataBlockIndex();
             if (currentBlockIndex != positionDataBlockIndex) {
-                // The current buffered data block is not the one we need, so load the relevant
-                // data block bytes into the buffer.
-                dataBlockBuffer.rewind();
-
-                // Work out the smaller of either the available destination space, or the size
-                // of a data block.
-                // We need to make sure that we don't overflow the destination buffer.
-                final int limit = destinationRemaining < dataBlockBuffer.capacity() ? destinationRemaining
-                : dataBlockBuffer.capacity();
-                dataBlockBuffer.limit(limit);
-                
                 // Work out the position for the start of the data block that we need to read.
                 final int positionDataBlockAddress = inode.logicalBlockAddresses().get(positionDataBlockIndex);
                 final long dskimgDataBlockOffset = positionDataBlockAddress
                         * dskimgFileSystem.getMetadata().dataBlockSize();
                 dskimgChannel.position(dskimgDataBlockOffset);
 
-                // Put as much data into our buffer as we can.
-                while (dataBlockBuffer.hasRemaining()) {
-                    dskimgChannel.read(dataBlockBuffer);
-                }
-
-                // Prepare the buffer for reading.
-                dataBlockBuffer.flip();
-
-                // Update the current data block index to
+                // Update the current data block index to one the DSKIMG channel is now pointing
+                // at
                 currentBlockIndex = positionDataBlockIndex;
             }
 
+            final int dataBlockRemaining = (int) (dskimgFileSystem.getMetadata().dataBlockSize()
+                    - (position % dskimgFileSystem.getMetadata().dataBlockSize()));
+
+            // Work out the smaller of either the available destination space, or the size
+            // of a data block.
+            // We need to make sure that we don't overflow the destination buffer.
+            final int limit = Math.min(destinationRemaining, dataBlockRemaining);
+            dataBlockBuffer.limit(limit);
+
+            // The current buffered data block is not the one we need, so load the relevant
+            // data block bytes into the buffer.
+            dataBlockBuffer.rewind();
+
+            // Put as much data into our buffer as we can.
+            while (dataBlockBuffer.hasRemaining()) {
+                dskimgChannel.read(dataBlockBuffer);
+            }
+
+            // Prepare the buffer for reading.
+            dataBlockBuffer.flip();
+
+            // Write the data block buffer data to the destination.
             dst.put(dataBlockBuffer);
 
             // Advance the position by the amount of data we just transferred.
