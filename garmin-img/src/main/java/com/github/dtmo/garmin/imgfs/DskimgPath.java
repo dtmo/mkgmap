@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
@@ -44,9 +46,9 @@ public class DskimgPath implements Path {
 
     @Override
     public DskimgPath getFileName() {
-        // The Garmin DSKIMG filesystem does not support nested directory structures, so we
-        // only need to strip off an optional leading separator character for absolute
-        // paths.
+        // The Garmin DSKIMG filesystem does not support nested directory structures, so
+        // we only need to strip off an optional leading separator character for
+        // absolute paths.
         if (!isAbsolute()) {
             return this;
         } else {
@@ -184,5 +186,10 @@ public class DskimgPath implements Path {
         } else {
             return false;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <A extends BasicFileAttributes> A readAttributes(final Class<A> attributesClass) throws NoSuchFileException {
+        return (A) dskimgFileSystem.getFileAttributes(this);
     }
 }

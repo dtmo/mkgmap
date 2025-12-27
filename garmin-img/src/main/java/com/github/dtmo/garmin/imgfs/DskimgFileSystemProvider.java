@@ -42,7 +42,7 @@ public class DskimgFileSystemProvider extends FileSystemProvider {
             filesystems.put(path, dskimgFileSystem);
 
             return dskimgFileSystem;
-        }    
+        }
     }
 
     @Override
@@ -58,7 +58,8 @@ public class DskimgFileSystemProvider extends FileSystemProvider {
 
         synchronized (filesystems) {
             if (filesystems.containsKey(dskimgFilePath)) {
-                throw new FileSystemAlreadyExistsException("The requested filesystem already exists: " + dskimgFilePath);
+                throw new FileSystemAlreadyExistsException(
+                        "The requested filesystem already exists: " + dskimgFilePath);
             }
 
             final DskimgFileSystem dskimgFileSystem = new DskimgFileSystem(this, dskimgFilePath);
@@ -103,8 +104,14 @@ public class DskimgFileSystemProvider extends FileSystemProvider {
     @Override
     public SeekableByteChannel newByteChannel(final Path path, final Set<? extends OpenOption> options,
             final FileAttribute<?>... attrs) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'newByteChannel'");
+        Objects.requireNonNull(path);
+
+        if (path instanceof DskimgPath dskimgPath) {
+            final DskimgFileSystem fileSystem = dskimgPath.getFileSystem();
+            return new DskimgByteChannel(fileSystem, fileSystem.getPathInode(dskimgPath));
+        } else {
+            throw new ProviderMismatchException();
+        }
     }
 
     @Override
@@ -176,10 +183,14 @@ public class DskimgFileSystemProvider extends FileSystemProvider {
 
     @Override
     public <A extends BasicFileAttributes> A readAttributes(final Path path, final Class<A> type,
-            final LinkOption... options)
-            throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'readAttributes'");
+            final LinkOption... options) throws IOException {
+        Objects.requireNonNull(path);
+
+        if (path instanceof DskimgPath dskimgPath) {
+            return dskimgPath.readAttributes(type);
+        } else {
+            throw new ProviderMismatchException();
+        }
     }
 
     @Override
@@ -198,7 +209,7 @@ public class DskimgFileSystemProvider extends FileSystemProvider {
 
     public void removeFileSystem(final DskimgFileSystem dskimgFileSystem) {
         synchronized (filesystems) {
-            filesystems.remove(dskimgFileSystem.getdskimgFilePath());
+            filesystems.remove(dskimgFileSystem.getDskimgFilePath());
         }
     }
 }

@@ -8,6 +8,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
@@ -146,8 +147,20 @@ public class DskimgFileSystem extends FileSystem {
         }
     }
 
-    public Path getdskimgFilePath() {
+    public Path getDskimgFilePath() {
         return dskimgFilePath;
+    }
+
+    public MasterBootRecord getMasterBootRecord() {
+        return masterBootRecord;
+    }
+
+    public DskimgMetadata getMetadata() {
+        return metadata;
+    }
+
+    public DskimgInode getPathInode(final DskimgPath path) {
+        return inodes.get(path);
     }
 
     public DskimgPath getRootDirectory() {
@@ -230,12 +243,17 @@ public class DskimgFileSystem extends FileSystem {
         return inodes.keySet().iterator();
     }
 
-    public static byte peekXorByte(final SeekableByteChannel channel) throws IOException {
-        final long position = channel.position();
-        final ByteBuffer xorByteBuffer = ByteBuffer.allocate(1);
-        channel.read(xorByteBuffer);
-        channel.position(position);
-        xorByteBuffer.flip();
-        return xorByteBuffer.get();
+    public DskimgFileAttributes getFileAttributes(final DskimgPath dskimgPath) throws NoSuchFileException {
+        if (dskimgPath.isRoot()) {
+            // I have no idea if this really makes sense
+            return new DskimgFileAttributes(false, metadata.dataBlockSize());
+        } else {
+            final DskimgInode dskimgInode = inodes.get(dskimgPath.getFileName());
+            if (dskimgInode != null) {
+                return new DskimgFileAttributes(true, dskimgInode.fileSize());
+            } else {
+                throw new NoSuchFileException(dskimgPath.toString());
+            }
+        }
     }
 }
